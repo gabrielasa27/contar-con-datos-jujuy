@@ -155,7 +155,6 @@ export default function MapaJujuy({ departments, selectedDeptId, activeFilter, o
   onFeaturesRef.current = onFeatures;
   const prevView = useRef(view3d);
   const markersRef = useRef([]);
-  const localityMarkersRef = useRef([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const containerRef = useRef(null);
@@ -318,46 +317,18 @@ export default function MapaJujuy({ departments, selectedDeptId, activeFilter, o
           return { id: f.properties.deptId, sector: f.properties.sector, el, marker };
         });
 
-        // Localidades destacadas: los puntos representan ciudades/localidades,
-        // no límites departamentales. Las coordenadas se expresan como [longitud, latitud].
-        const LOCALITY_POINTS = [
-          {
-            id: 'san-salvador-jujuy',
-            name: 'San Salvador de Jujuy',
-            department: 'Dr. Manuel Belgrano',
-            coordinates: [-65.2934167, -24.1928056],
-            gms: '24° 11′ 34.1″ S, 65° 17′ 36.3″ O',
-            alternative: '24° 11′ 08″ S, 65° 17′ 58″ O',
-            color: '#22d3ee'
-          },
-          {
-            id: 'purmamarca',
-            name: 'Purmamarca',
-            department: 'Tumbaya',
-            coordinates: [-65.483333, -23.733333],
-            gms: '23° 44′ 00″ S, 65° 29′ 00″ O',
-            color: '#fbbf24'
-          }
+        // Marcadores geográficos de localidades: no contienen indicadores productivos.
+        const localidades = [
+          { name: 'San Salvador de Jujuy', departamento: 'Dr. Manuel Belgrano', lng: -65.293417, lat: -24.192806, gms: '24° 11′ 34.1″ S, 65° 17′ 36.3″ O' },
+          { name: 'Purmamarca', departamento: 'Tumbaya', lng: -65.483333, lat: -23.733333, gms: '23° 44′ 00″ S, 65° 29′ 00″ O' }
         ];
-
-        localityMarkersRef.current = LOCALITY_POINTS.map((place) => {
-          const el = document.createElement('button');
-          el.type = 'button';
-          el.className = 'jujuy-locality-marker';
-          el.setAttribute('aria-label', `${place.name}, departamento ${place.department}`);
-          el.title = `${place.name} · ${place.department}`;
-          el.innerHTML = `<span class="jujuy-locality-dot" style="--marker-color:${place.color}"></span><span class="jujuy-locality-label">${place.name}</span>`;
-          el.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            new maplibregl.Popup({ closeButton: true, offset: 18, maxWidth: '280px' })
-              .setLngLat(place.coordinates)
-              .setHTML(`<strong>${place.name}</strong><br/>Departamento: ${place.department}<br/>GMS: ${place.gms}<br/>Decimal: ${place.coordinates[1].toFixed(6)}, ${place.coordinates[0].toFixed(6)}${place.alternative ? `<br/>Coordenada alternativa: ${place.alternative}` : ''}`)
-              .addTo(map);
-            map.flyTo({ center: place.coordinates, zoom: 9.5, duration: 1200 });
-          });
-          return new maplibregl.Marker({ element: el, anchor: 'bottom' })
-            .setLngLat(place.coordinates)
-            .addTo(map);
+        localidades.forEach((l) => {
+          const el = document.createElement('button'); el.type = 'button'; el.className = 'locality-label';
+          el.innerHTML = `<span class="locality-dot"></span><span>${l.name}</span>`;
+          el.title = `${l.departamento} · ${l.gms} · ${l.lat.toFixed(6)}, ${l.lng.toFixed(6)}`;
+          const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([l.lng, l.lat]).addTo(map);
+          el.addEventListener('click', (ev) => { ev.stopPropagation(); popup.setLngLat([l.lng, l.lat]).setText(`${l.name} · Departamento: ${l.departamento} · ${l.gms} · ${l.lat.toFixed(6)}, ${l.lng.toFixed(6)}`).addTo(map); });
+          markersRef.current.push({ id: `localidad-${l.name}`, sector: 'territorio', el, marker });
         });
 
         map.on('click', 'deptos-fill', (e) => {
@@ -397,7 +368,6 @@ export default function MapaJujuy({ departments, selectedDeptId, activeFilter, o
       resizeObserver?.disconnect();
       popup.remove();
       markersRef.current.forEach((m) => m.marker.remove());
-      localityMarkersRef.current.forEach((m) => m.remove());
       map.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -463,12 +433,6 @@ export default function MapaJujuy({ departments, selectedDeptId, activeFilter, o
 
   return (
     <div className="relative w-full h-full">
-      <style>{`
-        .jujuy-locality-marker { display:flex; flex-direction:column; align-items:center; gap:3px; padding:0; border:0; background:transparent; cursor:pointer; white-space:nowrap; }
-        .jujuy-locality-dot { width:14px; height:14px; border-radius:9999px; background:var(--marker-color); border:2px solid #fff; box-shadow:0 0 0 4px color-mix(in srgb, var(--marker-color) 35%, transparent), 0 0 16px var(--marker-color); }
-        .jujuy-locality-label { padding:4px 8px; border-radius:6px; color:#f8fafc; background:rgba(3,12,25,.92); border:1px solid var(--marker-color); font-size:11px; font-weight:700; text-shadow:0 1px 2px #000; box-shadow:0 4px 12px #0008; }
-        .jujuy-locality-marker:focus-visible { outline:2px solid white; outline-offset:4px; border-radius:6px; }
-      `}</style>
       <div ref={containerRef} className="w-full h-full rounded-xl overflow-hidden" />
       {loading && (
         <div className="absolute inset-0 z-[3] flex items-center justify-center gap-2 text-xs text-teal-100 bg-[#061116]/80" role="status" aria-live="polite">

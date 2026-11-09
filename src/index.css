@@ -12,3 +12,5 @@ button:focus-visible { outline: 2px solid #5eead4; outline-offset: 2px; }
 .dept-label { background: transparent; border: 0; padding: 2px 4px; pointer-events: none; /* los clics pasan al mapa: seleccionan el departamento o un elemento de la escena */ white-space: nowrap; color: #e8fbfa; font-size: 11px; font-weight: 600; text-shadow: 0 0 3px #020617, 0 0 6px #020617, 0 0 10px #020617; transition: opacity .2s; }
 .dept-label.is-dim { opacity: .25; }
 .dept-label.is-selected { color: #fff; font-size: 13px; }
+
+.locality-label{display:flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;border:1px solid rgba(251,191,36,.8);background:rgba(7,20,32,.94);color:#fff7d6;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;box-shadow:0 2px 12px #0009}.locality-dot{width:8px;height:8px;border-radius:50%;background:#fbbf24;box-shadow:0 0 8px #fbbf24;flex:none}

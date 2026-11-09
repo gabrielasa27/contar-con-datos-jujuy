@@ -60,12 +60,3 @@ El piloto usa figuras procedurales animadas. Los modelos GLB/GLTF faltantes est�
 
 ## Nota sobre MapLibre 4.7.1 (relieve)
 Tras `easeTo`/`fitBounds`/`flyTo` con relieve, esta versión deja `_elevationFreeze` en `true` y la altura del terreno bajo el centro de la cámara deja de seguirse hasta el primer gesto manual (el encuadre queda corrido y las escenas 3D se ven desplazadas). `MapaJujuy.jsx` lo libera al terminar cada movimiento (`unfreezeElevation`, usa un campo interno con verificación de tipo). Si actualizás MapLibre, revisá si sigue siendo necesario.
-
-
-## Localidades destacadas en el mapa
-
-El mapa incorpora dos marcadores geográficos seleccionables:
-- **San Salvador de Jujuy**, ubicado dentro del departamento **Dr. Manuel Belgrano**. Coordenada principal: 24° 11′ 34.1″ S, 65° 17′ 36.3″ O (−24.192806, −65.293417). Se conserva una coordenada alternativa en la ficha emergente.
-- **Purmamarca**, localidad ubicada en el departamento **Tumbaya**. Coordenada: 23° 44′ 00″ S, 65° 29′ 00″ O (−23.733333, −65.483333).
-
-Los marcadores identifican localidades puntuales; no representan polígonos ni límites administrativos departamentales.
