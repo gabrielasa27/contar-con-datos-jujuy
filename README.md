@@ -43,7 +43,7 @@ public/data/jujuy-departamentos.geojson   límites oficiales (IGN)
 4. Revisar la escena en el mapa. Si falta un modelo propio, usar o crear una plantilla en `activitiesConfig.js`.
 
 ## Datos
-El proyecto no incluye datos numéricos ni gráficos: solo el mapa, las escenas 3D (personas, fábricas, vehículos) y la foto de Susques (`public/img/susques.jpg`).
+El proyecto no incluye datos numéricos ni gráficos: solo el mapa, las escenas 3D (personas, fábricas, vehículos).
 
 ## Pruebas
 - `npm run test:regresion`: el motor modular dibuja y selecciona exactamente igual que el piloto original de Susques.

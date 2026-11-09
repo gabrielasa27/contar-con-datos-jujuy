@@ -146,7 +146,7 @@ const featureArea = (g) => {
   return polys.reduce((t, p) => t + ringArea(p[0]) - p.slice(1).reduce((h, r) => h + ringArea(r), 0), 0);
 };
 
-export default function MapaJujuy({ departments, selectedDeptId, activeFilter, onSelect, view3d = true, onFeatures, scenes, onScenePick, onLevel, onPhoto, photoUrl }) {
+export default function MapaJujuy({ departments, selectedDeptId, activeFilter, onSelect, view3d = true, onFeatures, scenes, onScenePick, onLevel }) {
   const scenesRef = useRef(null);
   const latest = useRef({});
   latest.current = { scenes, activeFilter, selectedDeptId, onScenePick, onLevel };
@@ -163,8 +163,6 @@ export default function MapaJujuy({ departments, selectedDeptId, activeFilter, o
   const readyRef = useRef(false);
   const prevSelected = useRef(null);
   // callbacks siempre actualizados sin recrear el mapa
-  const onPhotoRef = useRef(onPhoto);
-  onPhotoRef.current = onPhoto;
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
@@ -318,19 +316,6 @@ export default function MapaJujuy({ departments, selectedDeptId, activeFilter, o
           const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(labelPoint(f.geometry)).addTo(map);
           return { id: f.properties.deptId, sector: f.properties.sector, el, marker };
         });
-
-        // foto de Susques sobre el mapa
-        const susques = gj.features.find((f) => f.properties.deptId === 'susques');
-        if (susques && photoUrl) {
-          const ph = document.createElement('button');
-          ph.type = 'button';
-          ph.className = 'map-photo';
-          ph.title = 'Ver foto de Susques';
-          ph.innerHTML = `<img src="${photoUrl}" alt="Susques" />`;
-          ph.addEventListener('click', (ev) => { ev.stopPropagation(); onPhotoRef.current?.(); });
-          const [lx, ly] = labelPoint(susques.geometry);
-          new maplibregl.Marker({ element: ph, anchor: 'bottom', offset: [0, -14] }).setLngLat([lx, ly]).addTo(map);
-        }
 
         map.on('click', 'deptos-fill', (e) => {
           if (e.originalEvent.__sceneHit) return;

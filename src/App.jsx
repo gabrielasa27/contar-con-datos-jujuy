@@ -11,7 +11,6 @@ const SECTORS = {
   servicios: { label: 'Servicios',           color: '#0ea5e9' }
 };
 const SCENE_TOGGLES = [['people', 'Personas'], ['vehicles', 'Vehículos'], ['facilities', 'Fábricas e instalaciones'], ['animate', 'Animaciones']];
-const FOTO = '/img/susques.jpg';
 const glass = 'bg-[#07111d]/85 border border-white/12 backdrop-blur-md';
 
 export default function App() {
@@ -19,7 +18,6 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState('todos');
   const [view3d, setView3d] = useState(true);
   const [sceneOpts, setSceneOpts] = useState({ people: true, vehicles: true, facilities: true, animate: true, preview: true });
-  const [foto, setFoto] = useState(false);
 
   const mapDepartments = useMemo(() => JUJUY_DEPARTMENTS_DATA.map((d) => ({
     ...d, color: SECTORS[d.sector].color, sector: d.sector === 'servicios' ? 'turismo' : d.sector
@@ -32,7 +30,7 @@ export default function App() {
   return (
     <div className="h-screen w-screen relative bg-[#050d17] text-slate-100 overflow-hidden">
       <MapaJujuy departments={mapDepartments} selectedDeptId={selectedDeptId} activeFilter={activeFilter}
-        onSelect={setSelectedDeptId} view3d={view3d} scenes={sceneOpts} onPhoto={() => setFoto(true)} photoUrl={FOTO} />
+        onSelect={setSelectedDeptId} view3d={view3d} scenes={sceneOpts} />
 
       <header className={`${glass} absolute top-4 left-4 z-10 rounded-xl px-4 py-2.5 flex items-center gap-2 font-bold tracking-wide`}>
         <Mountain className="w-5 h-5 text-teal-300" /> <span>JUJUY <span className="text-teal-300">MAPA 3D</span></span>
@@ -71,11 +69,6 @@ export default function App() {
             <div><h2 className="text-2xl font-bold leading-tight">{dept.name}</h2><p className="text-sm text-slate-400">{dept.region}</p></div>
             <span className="text-[11px] px-2.5 py-1 rounded-lg border whitespace-nowrap" style={{ color: sector.color, borderColor: sector.color + '80', background: sector.color + '1f' }}>{sector.label}</span>
           </div>
-          {dept.id === 'susques' && (
-            <button onClick={() => setFoto(true)} className="block rounded-lg overflow-hidden border border-white/10 hover:border-teal-300/60">
-              <img src={FOTO} alt="Susques y la Puna" className="w-full h-32 object-cover" />
-            </button>
-          )}
           <ul className="space-y-1.5 text-[13px] text-slate-300">
             {(DEPARTMENTS_CONFIG.find((c) => c.id === dept.id)?.actividades || []).map((act) => (
               <li key={act.label} className="flex gap-2"><i className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sector.color }} />{act.label}</li>
@@ -84,14 +77,6 @@ export default function App() {
         </aside>
       )}
 
-      {foto && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm grid place-items-center p-4" onMouseDown={(e) => e.target === e.currentTarget && setFoto(false)}>
-          <div className="relative max-w-5xl w-full">
-            <button onClick={() => setFoto(false)} aria-label="Cerrar" className="absolute -top-3 -right-3 bg-[#07111d] border border-white/20 rounded-full p-1.5"><X className="w-4 h-4" /></button>
-            <img src={FOTO} alt="Susques y la Puna" className="w-full rounded-xl border border-white/15" />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
