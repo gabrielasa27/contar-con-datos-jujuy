@@ -146,7 +146,7 @@ const featureArea = (g) => {
   return polys.reduce((t, p) => t + ringArea(p[0]) - p.slice(1).reduce((h, r) => h + ringArea(r), 0), 0);
 };
 
-export default function MapaJujuy({ departments, selectedDeptId, activeFilter, onSelect, view3d = true, onFeatures, scenes, onScenePick, onLevel }) {
+export default function MapaJujuy({ departments, selectedDeptId, activeFilter, onSelect, view3d = true, onFeatures, scenes, onScenePick, onLevel, onPhoto, photoUrl }) {
   const scenesRef = useRef(null);
   const latest = useRef({});
   latest.current = { scenes, activeFilter, selectedDeptId, onScenePick, onLevel };
@@ -163,6 +163,8 @@ export default function MapaJujuy({ departments, selectedDeptId, activeFilter, o
   const readyRef = useRef(false);
   const prevSelected = useRef(null);
   // callbacks siempre actualizados sin recrear el mapa
+  const onPhotoRef = useRef(onPhoto);
+  onPhotoRef.current = onPhoto;
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
@@ -317,19 +319,18 @@ export default function MapaJujuy({ departments, selectedDeptId, activeFilter, o
           return { id: f.properties.deptId, sector: f.properties.sector, el, marker };
         });
 
-        // Marcadores geográficos de localidades: no contienen indicadores productivos.
-        const localidades = [
-          { name: 'San Salvador de Jujuy', departamento: 'Dr. Manuel Belgrano', lng: -65.293417, lat: -24.192806, gms: '24° 11′ 34.1″ S, 65° 17′ 36.3″ O' },
-          { name: 'Purmamarca', departamento: 'Tumbaya', lng: -65.483333, lat: -23.733333, gms: '23° 44′ 00″ S, 65° 29′ 00″ O' }
-        ];
-        localidades.forEach((l) => {
-          const el = document.createElement('button'); el.type = 'button'; el.className = 'locality-label';
-          el.innerHTML = `<span class="locality-dot"></span><span>${l.name}</span>`;
-          el.title = `${l.departamento} · ${l.gms} · ${l.lat.toFixed(6)}, ${l.lng.toFixed(6)}`;
-          const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([l.lng, l.lat]).addTo(map);
-          el.addEventListener('click', (ev) => { ev.stopPropagation(); popup.setLngLat([l.lng, l.lat]).setText(`${l.name} · Departamento: ${l.departamento} · ${l.gms} · ${l.lat.toFixed(6)}, ${l.lng.toFixed(6)}`).addTo(map); });
-          markersRef.current.push({ id: `localidad-${l.name}`, sector: 'territorio', el, marker });
-        });
+        // foto de Susques sobre el mapa
+        const susques = gj.features.find((f) => f.properties.deptId === 'susques');
+        if (susques && photoUrl) {
+          const ph = document.createElement('button');
+          ph.type = 'button';
+          ph.className = 'map-photo';
+          ph.title = 'Ver foto de Susques';
+          ph.innerHTML = `<img src="${photoUrl}" alt="Susques" />`;
+          ph.addEventListener('click', (ev) => { ev.stopPropagation(); onPhotoRef.current?.(); });
+          const [lx, ly] = labelPoint(susques.geometry);
+          new maplibregl.Marker({ element: ph, anchor: 'bottom', offset: [0, -14] }).setLngLat([lx, ly]).addTo(map);
+        }
 
         map.on('click', 'deptos-fill', (e) => {
           if (e.originalEvent.__sceneHit) return;

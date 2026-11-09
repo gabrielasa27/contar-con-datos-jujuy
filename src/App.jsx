@@ -1,4 +1,97 @@
-import React,{useState} from 'react';import {MapPin,Mountain,RotateCcw,Map as MapIcon} from 'lucide-react';import MapaJujuy from './MapaJujuy';import {JUJUY_DEPARTMENTS_DATA} from './data';
-const departamentos=JUJUY_DEPARTMENTS_DATA.map(({id,name})=>({id,name,color:'#247b83',sector:'territorio'}));
-const localidades=[{name:'San Salvador de Jujuy',departamento:'Dr. Manuel Belgrano',lat:-24.192806,lng:-65.293417,gms:'24° 11′ 34.1″ S, 65° 17′ 36.3″ O'},{name:'Purmamarca',departamento:'Tumbaya',lat:-23.733333,lng:-65.483333,gms:'23° 44′ 00″ S, 65° 29′ 00″ O'}];
-export default function App(){const[selected,setSelected]=useState(null);const[view3d,setView3d]=useState(true);const dept=departamentos.find(d=>d.id===selected);return <main className="min-h-screen bg-[#06111d] text-slate-100"><header className="h-16 px-5 flex items-center justify-between border-b border-white/10 bg-[#081827]"><div className="flex items-center gap-3"><Mountain className="text-teal-300"/><div><div className="font-bold tracking-wide">JUJUY <span className="text-teal-300">TERRITORIO</span></div><div className="text-[10px] text-slate-400">Mapa geográfico · relieve · departamentos · localidades</div></div></div><button onClick={()=>setView3d(v=>!v)} className="rounded-lg border border-teal-700 px-3 py-2 text-xs">{view3d?'Vista 3D':'Vista 2D'}</button></header><div className="flex min-h-[calc(100vh-64px)]"><aside className="w-72 shrink-0 border-r border-white/10 bg-[#081827] p-4 overflow-y-auto max-h-[calc(100vh-64px)]"><div className="flex items-center gap-2 text-teal-200 font-semibold mb-3"><MapIcon size={17}/> Departamentos de Jujuy</div><button onClick={()=>setSelected(null)} className={`w-full text-left rounded-lg px-3 py-2 mb-2 text-sm ${!selected?'bg-teal-900/50 text-teal-100':'hover:bg-white/5 text-slate-300'}`}><RotateCcw size={14} className="inline mr-2"/>Provincia completa</button><div className="space-y-1">{departamentos.map(d=><button key={d.id} onClick={()=>setSelected(d.id)} className={`w-full text-left rounded-lg px-3 py-2 text-sm ${selected===d.id?'bg-teal-900/50 text-teal-100':'hover:bg-white/5 text-slate-300'}`}><span className="inline-block w-2 h-2 rounded-full bg-teal-400 mr-2"/>{d.name}</button>)}</div><div className="border-t border-white/10 mt-5 pt-4"><div className="text-teal-200 font-semibold text-sm mb-3">Localidades de referencia</div>{localidades.map(l=><div key={l.name} className="mb-3 rounded-lg bg-white/5 p-3"><div className="font-medium text-sm flex items-center gap-2"><MapPin size={14} className="text-amber-300"/>{l.name}</div><div className="text-xs text-slate-400 mt-1">Departamento: {l.departamento}</div><div className="text-[11px] text-slate-500 mt-1">{l.gms}</div><div className="text-[11px] text-slate-500">{l.lat.toFixed(6)}, {l.lng.toFixed(6)}</div></div>)}</div><p className="text-[10px] text-slate-500 mt-4">Seleccioná un departamento para resaltarlo. Los marcadores identifican localidades de referencia.</p></aside><section className="relative flex-1 min-w-0 min-h-[calc(100vh-64px)] p-3"><div className="absolute inset-3 rounded-xl overflow-hidden border border-white/10"><MapaJujuy departments={departamentos} selectedDeptId={selected} activeFilter="todos" onSelect={setSelected} view3d={view3d} scenes={{people:false,vehicles:false,facilities:false,animate:false}}/></div>{dept&&<div className="absolute bottom-7 left-7 z-10 rounded-xl border border-teal-700/60 bg-[#071827]/95 px-4 py-3"><div className="text-xs text-teal-300">Departamento seleccionado</div><div className="font-semibold">{dept.name}</div></div>}</section></div></main>}
+import React, { useMemo, useState } from 'react';
+import { ArrowLeft, Mountain, X } from 'lucide-react';
+import MapaJujuy from './MapaJujuy';
+import { JUJUY_DEPARTMENTS_DATA } from './data';
+import { DEPARTMENTS_CONFIG } from './config/departmentsConfig';
+
+const SECTORS = {
+  mineril:   { label: 'Minería y litio',     color: '#a855f7' },
+  agro:      { label: 'Agroindustria',       color: '#10b981' },
+  turismo:   { label: 'Turismo y servicios', color: '#f59e0b' },
+  servicios: { label: 'Servicios',           color: '#0ea5e9' }
+};
+const SCENE_TOGGLES = [['people', 'Personas'], ['vehicles', 'Vehículos'], ['facilities', 'Fábricas e instalaciones'], ['animate', 'Animaciones']];
+const FOTO = '/img/susques.jpg';
+const glass = 'bg-[#07111d]/85 border border-white/12 backdrop-blur-md';
+
+export default function App() {
+  const [selectedDeptId, setSelectedDeptId] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('todos');
+  const [view3d, setView3d] = useState(true);
+  const [sceneOpts, setSceneOpts] = useState({ people: true, vehicles: true, facilities: true, animate: true, preview: true });
+  const [foto, setFoto] = useState(false);
+
+  const mapDepartments = useMemo(() => JUJUY_DEPARTMENTS_DATA.map((d) => ({
+    ...d, color: SECTORS[d.sector].color, sector: d.sector === 'servicios' ? 'turismo' : d.sector
+  })), []);
+
+  const dept = JUJUY_DEPARTMENTS_DATA.find((d) => d.id === selectedDeptId);
+  const sector = dept ? SECTORS[dept.sector] : null;
+  const LEGEND = [['agro', 'Agroindustria'], ['mineril', 'Minería y litio'], ['turismo', 'Turismo y servicios']];
+
+  return (
+    <div className="h-screen w-screen relative bg-[#050d17] text-slate-100 overflow-hidden">
+      <MapaJujuy departments={mapDepartments} selectedDeptId={selectedDeptId} activeFilter={activeFilter}
+        onSelect={setSelectedDeptId} view3d={view3d} scenes={sceneOpts} onPhoto={() => setFoto(true)} photoUrl={FOTO} />
+
+      <header className={`${glass} absolute top-4 left-4 z-10 rounded-xl px-4 py-2.5 flex items-center gap-2 font-bold tracking-wide`}>
+        <Mountain className="w-5 h-5 text-teal-300" /> <span>JUJUY <span className="text-teal-300">MAPA 3D</span></span>
+      </header>
+
+      <div className={`${glass} absolute left-4 bottom-20 hidden md:flex flex-col rounded-xl overflow-hidden text-xs z-10`}>
+        {[[true, '3D'], [false, '2D']].map(([v, l]) => (
+          <button key={l} onClick={() => setView3d(v)} className={`px-4 py-2.5 ${view3d === v ? 'bg-teal-400 text-[#04141c] font-bold' : 'text-slate-300 hover:bg-white/5'}`}>{l}</button>
+        ))}
+      </div>
+
+      <div className={`${glass} absolute left-4 bottom-4 rounded-xl px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] z-10`}>
+        {LEGEND.map(([id, label]) => (
+          <button key={id} onClick={() => setActiveFilter(activeFilter === id ? 'todos' : id)}
+            className={`flex items-center gap-1.5 ${activeFilter !== 'todos' && activeFilter !== id ? 'opacity-40' : ''}`}>
+            <i className="w-2.5 h-2.5 rounded-full" style={{ background: SECTORS[id].color }} />{label}
+          </button>
+        ))}
+      </div>
+
+      <div className={`${glass} absolute left-1/2 -translate-x-1/2 bottom-4 rounded-xl px-3 py-2 hidden md:flex items-center gap-2 text-[11px] z-10`}>
+        {SCENE_TOGGLES.map(([k, label]) => (
+          <button key={k} onClick={() => setSceneOpts((o) => ({ ...o, [k]: !o[k] }))} aria-pressed={sceneOpts[k]}
+            className={`px-2.5 py-1 rounded-lg border transition ${sceneOpts[k] ? 'border-teal-300/70 text-teal-200 bg-teal-300/10' : 'border-white/15 text-slate-500'}`}>{label}</button>
+        ))}
+        <button onClick={() => setActiveFilter('todos')} className="px-2.5 py-1 rounded-lg border border-white/15 text-slate-300 hover:bg-white/5">Todos</button>
+      </div>
+
+      {dept && (
+        <aside className={`${glass} absolute right-4 top-4 w-[300px] max-w-[calc(100%-2rem)] rounded-xl p-4 z-10 flex flex-col gap-3`}>
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <button onClick={() => setSelectedDeptId(null)} className="flex items-center gap-2 hover:text-white"><ArrowLeft className="w-3.5 h-3.5" /> Volver a la provincia</button>
+            <button onClick={() => setSelectedDeptId(null)} aria-label="Cerrar"><X className="w-4 h-4" /></button>
+          </div>
+          <div className="flex items-start justify-between gap-2">
+            <div><h2 className="text-2xl font-bold leading-tight">{dept.name}</h2><p className="text-sm text-slate-400">{dept.region}</p></div>
+            <span className="text-[11px] px-2.5 py-1 rounded-lg border whitespace-nowrap" style={{ color: sector.color, borderColor: sector.color + '80', background: sector.color + '1f' }}>{sector.label}</span>
+          </div>
+          {dept.id === 'susques' && (
+            <button onClick={() => setFoto(true)} className="block rounded-lg overflow-hidden border border-white/10 hover:border-teal-300/60">
+              <img src={FOTO} alt="Susques y la Puna" className="w-full h-32 object-cover" />
+            </button>
+          )}
+          <ul className="space-y-1.5 text-[13px] text-slate-300">
+            {(DEPARTMENTS_CONFIG.find((c) => c.id === dept.id)?.actividades || []).map((act) => (
+              <li key={act.label} className="flex gap-2"><i className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sector.color }} />{act.label}</li>
+            ))}
+          </ul>
+        </aside>
+      )}
+
+      {foto && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm grid place-items-center p-4" onMouseDown={(e) => e.target === e.currentTarget && setFoto(false)}>
+          <div className="relative max-w-5xl w-full">
+            <button onClick={() => setFoto(false)} aria-label="Cerrar" className="absolute -top-3 -right-3 bg-[#07111d] border border-white/20 rounded-full p-1.5"><X className="w-4 h-4" /></button>
+            <img src={FOTO} alt="Susques y la Puna" className="w-full rounded-xl border border-white/15" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
